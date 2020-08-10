@@ -70,7 +70,7 @@ def init():
 
             print("{}: Add contract {}".format(gts(), contract.id))
 
-        if data.has('params'):
+        if 'params' in data:
             if data.get('params', {}).get('login', '') != '':
                 contract.login = data['params']['login']
             if data.get('params', {}).get('patient', '') != '':

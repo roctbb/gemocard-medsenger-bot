@@ -76,6 +76,9 @@ def init():
             if data.get('params', {}).get('patient', '') != '':
                 contract.patient = int(data['params']['patient'])
 
+            if contract.login and contract.patient:
+                gemocard_api.subscribe(contract.login, contract.patient, contract.uuid)
+
         db.session.commit()
 
 
@@ -124,8 +127,8 @@ def receive():
     data = request.json
     # ...
     uid = data.get('id', '')
-    systolic_pressure = data.get('data', {}).get('systolic_pressure')
-    diastolic_pressure = data.get('data', {}).get('diastolic_pressure')
+    systolic_pressure = data.get('data', {}).get('systolic')
+    diastolic_pressure = data.get('data', {}).get('diastolic')
     pulse = data.get('data', {}).get('pulse')
     date = data.get('data', {}).get('date')
 
@@ -145,6 +148,8 @@ def receive():
                 agents_api.add_record(contract.id, 'diastolic_pressure', diastolic_pressure, timestamp)
             if pulse:
                 agents_api.add_record(contract.id, 'pulse', pulse, timestamp)
+        else:
+            print("Contract {} nopt found!".format(uid))
 
 
     return 'ok'
@@ -214,4 +219,7 @@ def save_message():
 
     return "ok"
 
-app.run(port=PORT, host=HOST)
+if SSL_CONTEXT:
+    app.run(port=PORT, host=HOST, ssl_context=SSL_CONTEXT)
+else:
+    app.run(port=PORT, host=HOST)

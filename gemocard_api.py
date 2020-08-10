@@ -10,10 +10,16 @@ def subscribe(login, patient, uid):
     }
 
     try:
+        try:
+            unsubscribe(uid)
+        except:
+            pass
+
         requests.post(GEMOCARD_HOST + '/subscribe', json=data)
 
         return True
     except Exception as e:
+        print(e)
         return False
 
 
@@ -27,6 +33,7 @@ def unsubscribe(uid):
 
         return True
     except Exception as e:
+        print(e)
         return False
 
 # # Gemocard POST HOST + /subscribe

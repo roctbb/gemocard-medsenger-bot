@@ -76,8 +76,11 @@ def init():
             if data.get('params', {}).get('patient', '') != '':
                 contract.patient = int(data['params']['patient'])
 
-            if contract.login and contract.patient:
-                gemocard_api.subscribe(contract.login, contract.patient, contract.uuid)
+        if contract.login and contract.patient:
+            if gemocard_api.subscribe(contract.login, contract.patient, contract.uuid):
+                print(gts(), "Subscribed {}".format(contract.uuid))
+            else:
+                print(gts(), "Not subscribed {}".format(contract.uuid))
 
         db.session.commit()
 
@@ -107,6 +110,12 @@ def remove():
             contract.active = False
             db.session.commit()
 
+            if contract.login and contract.patient:
+                if gemocard_api.unsubscribe(contract.uuid):
+                    print("{}: Unsubscribed {}".format(gts(), contract.uuid))
+                else:
+                    print("{}: Not unsubscribed {}".format(gts(), contract.uuid))
+
             print("{}: Deactivate contract {}".format(gts(), contract.id))
         else:
             print('contract not found')
@@ -132,6 +141,8 @@ def receive():
     pulse = data.get('data', {}).get('pulse')
     date = data.get('data', {}).get('date')
 
+    print("{}: Unsubscribed {}".format(gts(), data))
+
     if date:
         timestamp = datetime.datetime.strptime(date, "%Y-%m-%dT%H:%M:%S%z").timestamp()
     else:
@@ -149,7 +160,7 @@ def receive():
             if pulse:
                 agents_api.add_record(contract.id, 'pulse', pulse, timestamp)
         else:
-            print("Contract {} nopt found!".format(uid))
+            print("Contract {} not found!".format(uid))
 
 
     return 'ok'

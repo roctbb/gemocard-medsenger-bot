@@ -9,6 +9,8 @@ def subscribe(login, patient, uid):
         "id": uid
     }
 
+    print("Send to {}: {}".format(GEMOCARD_HOST + '/subscribe', data))
+
     try:
         try:
             unsubscribe(uid)
@@ -27,6 +29,8 @@ def unsubscribe(uid):
     data = {
         "id": uid,
     }
+
+    print("Send to {}: {}".format(GEMOCARD_HOST + '/unsubscribe', data))
 
     try:
         requests.post(GEMOCARD_HOST + '/unsubscribe', json=data)

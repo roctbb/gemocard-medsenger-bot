@@ -141,10 +141,10 @@ def receive():
     pulse = data.get('data', {}).get('pulse')
     date = data.get('data', {}).get('date')
 
-    print("{}: Unsubscribed {}".format(gts(), data))
+    print("{}: Got {}".format(gts(), data))
 
     if date:
-        timestamp = datetime.datetime.strptime(date, "%Y-%m-%dT%H:%M:%S%z").timestamp()
+        timestamp = datetime.datetime.strptime(date, "%Y-%m-%dT%H:%M:%S.%fZ").timestamp()
     else:
         timestamp = None
 

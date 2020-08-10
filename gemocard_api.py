@@ -20,6 +20,10 @@ def subscribe(login, patient, uid):
         answer = requests.post(GEMOCARD_HOST + '/subscribe', json=data)
         print(answer.text)
 
+        if answer.text != "OK":
+            print('Answer not OK')
+            return False
+
         return True
     except Exception as e:
         print(e)
@@ -36,6 +40,10 @@ def unsubscribe(uid):
     try:
         answer = requests.post(GEMOCARD_HOST + '/unsubscribe', json=data)
         print(answer.text)
+
+        if answer.text != "OK":
+            print('Answer not OK')
+            return False
 
         return True
     except Exception as e:

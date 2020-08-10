@@ -17,7 +17,8 @@ def subscribe(login, patient, uid):
         except:
             pass
 
-        requests.post(GEMOCARD_HOST + '/subscribe', json=data)
+        answer = requests.post(GEMOCARD_HOST + '/subscribe', json=data)
+        print(answer.text)
 
         return True
     except Exception as e:
@@ -33,7 +34,8 @@ def unsubscribe(uid):
     print("Send to {}: {}".format(GEMOCARD_HOST + '/unsubscribe', data))
 
     try:
-        requests.post(GEMOCARD_HOST + '/unsubscribe', json=data)
+        answer = requests.post(GEMOCARD_HOST + '/unsubscribe', json=data)
+        print(answer.text)
 
         return True
     except Exception as e:

@@ -201,7 +201,7 @@ def setting_save():
         if query.count() != 0:
             # TODO: check login
             contract = query.first()
-            contract.mode = int(request.form.get('mode', 0))
+            contract.patient = int(request.form.get('patient', 0))
             contract.login = request.form.get('login', 0)
 
             if not contract.login:

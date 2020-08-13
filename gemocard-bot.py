@@ -6,11 +6,13 @@ import gemocard_api
 import agents_api
 from flask_sqlalchemy import SQLAlchemy
 from uuid import uuid4
+from datetime import timezone
 
 app = Flask(__name__)
 db_string = "postgres://{}:{}@{}:{}/{}".format(DB_LOGIN, DB_PASSWORD, DB_HOST, DB_PORT, DB_DATABASE)
 app.config['SQLALCHEMY_DATABASE_URI'] = db_string
 db = SQLAlchemy(app)
+
 
 def gts():
     now = datetime.datetime.now()
@@ -29,6 +31,7 @@ try:
     db.create_all()
 except:
     print('cant create structure')
+
 
 @app.route('/status', methods=['POST'])
 def status():
@@ -71,10 +74,9 @@ def init():
             print("{}: Add contract {}".format(gts(), contract.id))
 
         if 'params' in data:
-            if data.get('params', {}).get('login', '') != '':
+            if data.get('params', {}).get('gemocard_login', '') != '':
                 contract.login = data['params']['login']
-            if data.get('params', {}).get('patient', '') != '':
-                contract.patient = int(data['params']['patient'])
+            contract.patient = 0
 
         if contract.login and contract.patient:
             if gemocard_api.subscribe(contract.login, contract.patient, contract.uuid):
@@ -131,6 +133,7 @@ def remove():
 def index():
     return 'waiting for the thunder!'
 
+
 @app.route('/receive', methods=['POST'])
 def receive():
     data = request.json
@@ -144,7 +147,9 @@ def receive():
     print("{}: Got {}".format(gts(), data))
 
     if date:
-        timestamp = datetime.datetime.strptime(date, "%Y-%m-%dT%H:%M:%S.%fZ").timestamp()
+        timestamp = datetime.datetime.strptime(date, "%Y-%m-%dT%H:%M:%S.%fZ")
+        timestamp += datetime.timedelta(hours=3)
+        timestamp = timestamp.timestamp()
     else:
         timestamp = None
 
@@ -152,7 +157,7 @@ def receive():
         query = Contract.query.filter_by(uuid=uid)
         if query.count() != 0:
             contract = query.first()
-            
+
             if systolic_pressure:
                 agents_api.add_record(contract.id, 'systolic_pressure', systolic_pressure, timestamp)
             if diastolic_pressure:
@@ -162,8 +167,8 @@ def receive():
         else:
             print("Contract {} not found!".format(uid))
 
-
     return 'ok'
+
 
 @app.route('/settings', methods=['GET'])
 def settings():
@@ -185,7 +190,6 @@ def settings():
         return "error"
 
     return render_template('settings.html', contract=contract, error='')
-
 
 
 @app.route('/settings', methods=['POST'])
@@ -220,6 +224,7 @@ def setting_save():
         <strong>Спасибо, окно можно закрыть</strong><script>window.parent.postMessage('close-modal-success','*');</script>
         """
 
+
 @app.route('/message', methods=['POST'])
 def save_message():
     data = request.json
@@ -229,6 +234,7 @@ def save_message():
         return "<strong>Некорректный ключ доступа.</strong> Свяжитесь с технической поддержкой."
 
     return "ok"
+
 
 if SSL_CONTEXT:
     app.run(port=PORT, host=HOST, ssl_context=SSL_CONTEXT)

@@ -6,7 +6,8 @@ def subscribe(login, patient, uid):
     data = {
         "login": login,
         "patient": patient,
-        "id": uid
+        "id": uid,
+        "partner": "medsenger"
     }
 
     print("Send to {}: {}".format(GEMOCARD_HOST + '/subscribe', data))
@@ -33,6 +34,7 @@ def subscribe(login, patient, uid):
 def unsubscribe(uid):
     data = {
         "id": uid,
+        "partner": "medsenger"
     }
 
     print("Send to {}: {}".format(GEMOCARD_HOST + '/unsubscribe', data))

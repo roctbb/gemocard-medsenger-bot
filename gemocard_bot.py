@@ -75,7 +75,7 @@ def init():
 
         if 'params' in data:
             if data.get('params', {}).get('gemocard_login', '') != '':
-                contract.login = data['params']['login']
+                contract.login = data['params']['gemocard_login'] 
             contract.patient = 0
 
         if contract.login and contract.patient:

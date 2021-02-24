@@ -235,8 +235,5 @@ def save_message():
 
     return "ok"
 
-
-if SSL_CONTEXT:
-    app.run(port=PORT, host=HOST, ssl_context=SSL_CONTEXT)
-else:
+if __name__ == "__main__":
     app.run(port=PORT, host=HOST)

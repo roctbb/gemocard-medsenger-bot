@@ -3,10 +3,12 @@ import json
 import datetime
 from config import *
 import gemocard_api
-import agents_api
+from medsenger_api import AgentApiClient
 from flask_sqlalchemy import SQLAlchemy
 from uuid import uuid4
 from datetime import timezone
+
+medsenger_api = AgentApiClient(API_KEY, MAIN_HOST, AGENT_ID, API_DEBUG)
 
 app = Flask(__name__)
 db_string = "postgres://{}:{}@{}:{}/{}".format(DB_LOGIN, DB_PASSWORD, DB_HOST, DB_PORT, DB_DATABASE)
@@ -37,7 +39,7 @@ except:
 def status():
     data = request.json
 
-    if data['api_key'] != APP_KEY:
+    if data['api_key'] != API_KEY:
         return 'invalid key'
 
     contract_ids = [l[0] for l in db.session.query(Contract.id).all()]
@@ -56,7 +58,7 @@ def status():
 def init():
     data = request.json
 
-    if data['api_key'] != APP_KEY:
+    if data['api_key'] != API_KEY:
         return 'invalid key'
 
     try:
@@ -99,7 +101,7 @@ def init():
 def remove():
     data = request.json
 
-    if data['api_key'] != APP_KEY:
+    if data['api_key'] != API_KEY:
         print('invalid key')
         return 'invalid key'
 
@@ -137,35 +139,55 @@ def index():
 @app.route('/receive', methods=['POST'])
 def receive():
     data = request.json
-    # ...
-    uid = data.get('id', '')
-    systolic_pressure = data.get('data', {}).get('systolic')
-    diastolic_pressure = data.get('data', {}).get('diastolic')
-    pulse = data.get('data', {}).get('pulse')
-    date = data.get('data', {}).get('date')
-
     print("{}: Got {}".format(gts(), data))
 
-    if date:
-        timestamp = datetime.datetime.strptime(date, "%Y-%m-%dT%H:%M:%S.%fZ")
-        timestamp += datetime.timedelta(hours=3)
-        timestamp = timestamp.timestamp()
-    else:
-        timestamp = None
+    uid = data.get('id', '')
+    rec_type = data.get('dataType', 'adRec')
 
     if uid:
-        query = Contract.query.filter_by(uuid=uid)
-        if query.count() != 0:
-            contract = query.first()
 
-            if systolic_pressure:
-                agents_api.add_record(contract.id, 'systolic_pressure', systolic_pressure, timestamp)
-            if diastolic_pressure:
-                agents_api.add_record(contract.id, 'diastolic_pressure', diastolic_pressure, timestamp)
-            if pulse:
-                agents_api.add_record(contract.id, 'pulse', pulse, timestamp)
+        contract = Contract.query.filter_by(uuid=uid).first()
+
+        if contract:
+
+            date = data.get('data', {}).get('date')
+            if date:
+                timestamp = datetime.datetime.strptime(date, "%Y-%m-%dT%H:%M:%S.%fZ")
+                timestamp += datetime.timedelta(hours=3)
+                timestamp = timestamp.timestamp()
+            else:
+                timestamp = None
+
+            if rec_type == 'adRec':
+                systolic_pressure = data.get('data', {}).get('systolic')
+                diastolic_pressure = data.get('data', {}).get('diastolic')
+                pulse = data.get('data', {}).get('pulse')
+
+                if systolic_pressure:
+                    medsenger_api.add_record(contract.id, 'systolic_pressure', systolic_pressure, timestamp)
+                if diastolic_pressure:
+                    medsenger_api.add_record(contract.id, 'diastolic_pressure', diastolic_pressure, timestamp)
+                if pulse:
+                    medsenger_api.add_record(contract.id, 'pulse', pulse, timestamp)
+
+
+            if rec_type == 'ecgRec':
+                text = data.get('data', {}).get('conclusion', {}).get('text', '')
+                data = data.get('data', {}).get('fileData')
+
+                if data:
+
+                    if text:
+                        text = "Заключение ЭКГ: {}".format(text)
+                        medsenger_api.add_record(contract.id, "info", text)
+
+                    medsenger_api.send_message(contract.id, text, only_doctor=True, attachments=[["ecg.pdf", "application/pdf", data]])
+
+
         else:
             print("Contract {} not found!".format(uid))
+    else:
+        print("Contract {} not found!".format(uid))
 
     return 'ok'
 
@@ -174,7 +196,7 @@ def receive():
 def settings():
     key = request.args.get('api_key', '')
 
-    if key != APP_KEY:
+    if key != API_KEY:
         return "<strong>Некорректный ключ доступа.</strong> Свяжитесь с технической поддержкой."
 
     try:
@@ -196,7 +218,7 @@ def settings():
 def setting_save():
     key = request.args.get('api_key', '')
 
-    if key != APP_KEY:
+    if key != API_KEY:
         return "<strong>Некорректный ключ доступа.</strong> Свяжитесь с технической поддержкой."
 
     try:
@@ -230,7 +252,7 @@ def save_message():
     data = request.json
     key = data['api_key']
 
-    if key != APP_KEY:
+    if key != API_KEY:
         return "<strong>Некорректный ключ доступа.</strong> Свяжитесь с технической поддержкой."
 
     return "ok"

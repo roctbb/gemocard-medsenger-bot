@@ -159,6 +159,7 @@ def receive():
                 timestamp = None
 
             if rec_type == 'adRec':
+                print("Got ad")
                 systolic_pressure = data.get('data', {}).get('systolic')
                 diastolic_pressure = data.get('data', {}).get('diastolic')
                 pulse = data.get('data', {}).get('pulse')
@@ -172,16 +173,20 @@ def receive():
 
 
             if rec_type == 'ecgRec':
-                text = data.get('data', {}).get('conclusion', {}).get('text', '')
-                data = data.get('data', {}).get('fileData')
+                print("Got ecg")
 
-                if data:
+                text = data.get('data', {}).get('conclusion', {}).get('text', '')
+                filedata = data.get('data', {}).get('fileData')
+
+                if filedata:
 
                     if text:
                         text = "Заключение ЭКГ: {}".format(text)
                         medsenger_api.add_record(contract.id, "info", text)
 
-                    medsenger_api.send_message(contract.id, text, only_doctor=True, attachments=[["ecg.pdf", "application/pdf", data]])
+                    medsenger_api.send_message(contract.id, text, only_doctor=True, attachments=[["ecg.pdf", "application/pdf", filedata]])
+                else:
+                    print("filedata is {}, full is {}".format(filedata, data))
 
 
         else:

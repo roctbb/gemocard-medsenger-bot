@@ -185,8 +185,6 @@ def receive():
                         medsenger_api.add_record(contract.id, "info", text)
 
                     medsenger_api.send_message(contract.id, text, only_doctor=True, attachments=[["ecg.pdf", "application/pdf", filedata]])
-                else:
-                    print("filedata is {}, full is {}".format(filedata, data))
 
 
         else:

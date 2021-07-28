@@ -182,7 +182,7 @@ def receive():
 
                     if text:
                         text = "Заключение ЭКГ: {}".format(text)
-                        medsenger_api.add_record(contract.id, "info", text)
+                        medsenger_api.add_record(contract.id, "information", text)
 
                     medsenger_api.send_message(contract.id, text, only_doctor=True, attachments=[["ecg.pdf", "application/pdf", filedata]])
 

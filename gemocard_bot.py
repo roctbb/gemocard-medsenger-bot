@@ -76,9 +76,16 @@ def init():
             print("{}: Add contract {}".format(gts(), contract.id))
 
         if 'params' in data:
-            if data.get('params', {}).get('gemocard_login', '') != '':
-                contract.login = data['params']['gemocard_login'] 
+            if data.get('params', {}).get('gemocard_login'):
+                contract.login = data['params']['gemocard_login']
+
             contract.patient = 0
+            if data.get('params', {}).get('gemocard_patient'):
+                try:
+                    contract.patient = int(data.get('params', {}).get('gemocard_patient'))
+                except:
+                    pass
+
 
         if contract.login and contract.patient:
             if gemocard_api.subscribe(contract.login, contract.patient, contract.uuid):

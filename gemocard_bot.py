@@ -170,14 +170,12 @@ def receive():
                 systolic_pressure = data.get('data', {}).get('systolic')
                 diastolic_pressure = data.get('data', {}).get('diastolic')
                 pulse = data.get('data', {}).get('pulse')
-
-                if systolic_pressure:
-                    medsenger_api.add_record(contract.id, 'systolic_pressure', systolic_pressure, timestamp)
-                if diastolic_pressure:
-                    medsenger_api.add_record(contract.id, 'diastolic_pressure', diastolic_pressure, timestamp)
-                if pulse:
-                    medsenger_api.add_record(contract.id, 'pulse', pulse, timestamp)
-
+                
+                medsenger_api.add_records(contract.id, [
+                    ['systolic_pressure', systolic_pressure, {}],
+                    ['diastolic_pressure', diastolic_pressure, {}],
+                    ['pulse', pulse, {}],
+                ], timestamp)
 
             if rec_type == 'ecgRec':
                 print("Got ecg")

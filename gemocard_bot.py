@@ -175,7 +175,7 @@ def receive():
                     ['systolic_pressure', systolic_pressure, {}],
                     ['diastolic_pressure', diastolic_pressure, {}],
                     ['pulse', pulse, {}],
-                ], timestamp)
+                ], timestamp, {})
 
             if rec_type == 'ecgRec':
                 print("Got ecg")

@@ -42,7 +42,7 @@ def status():
     if data['api_key'] != API_KEY:
         return 'invalid key'
 
-    contract_ids = [l[0] for l in db.session.query(Contract.id).all()]
+    contract_ids = [l[0] for l in db.session.query(Contract.id).filter_by(active=True).all()]
 
     answer = {
         "is_tracking_data": True,

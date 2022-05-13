@@ -93,6 +93,9 @@ def init():
             else:
                 print(gts(), "Not subscribed {}".format(contract.uuid))
 
+        medsenger_api.add_record(data.get('contract_id'), 'doctor_action',
+                                 'Подключен прибор "Гемокард" (логин {}).'.format(contract.login))
+
         db.session.commit()
 
 
@@ -128,6 +131,10 @@ def remove():
                     print("{}: Not unsubscribed {}".format(gts(), contract.uuid))
 
             print("{}: Deactivate contract {}".format(gts(), contract.id))
+
+            medsenger_api.add_record(data.get('contract_id'), 'doctor_action',
+                                     'Отключен прибор "Гемокард" (логин {}).'.format(contract.login))
+
         else:
             print('contract not found')
 

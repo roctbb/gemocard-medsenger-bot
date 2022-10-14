@@ -1,4 +1,4 @@
-from flask import Flask, request, render_template, abort
+from flask import Flask, request, render_template, abort, jsonify
 import json
 import datetime
 from config import *
@@ -85,7 +85,6 @@ def init():
                     contract.patient = int(data.get('params', {}).get('gemocard_patient'))
                 except:
                     pass
-
 
         if contract.login and contract.patient:
             if gemocard_api.subscribe(contract.login, contract.patient, contract.uuid):
@@ -177,7 +176,7 @@ def receive():
                 systolic_pressure = data.get('data', {}).get('systolic')
                 diastolic_pressure = data.get('data', {}).get('diastolic')
                 pulse = data.get('data', {}).get('pulse')
-                
+
                 medsenger_api.add_records(contract.id, [
                     ['systolic_pressure', systolic_pressure, {}],
                     ['diastolic_pressure', diastolic_pressure, {}],
@@ -227,6 +226,7 @@ def settings():
         return "error"
 
     return render_template('settings.html', contract=contract, error='')
+
 
 @app.route('/api/receive', methods=['POST'])
 def receive_data_from_app():
@@ -305,6 +305,12 @@ def save_message():
         return "<strong>Некорректный ключ доступа.</strong> Свяжитесь с технической поддержкой."
 
     return "ok"
+
+
+@app.route('/.well-known/apple-app-site-association')
+def apple_deeplink():
+    return jsonify({"applinks": {"apps": [], "details": [{"appID": "CRF22TKXX5.ru.medsenger.gemocard", "paths": ["*"]}]}})
+
 
 if __name__ == "__main__":
     app.run(port=PORT, host=HOST)

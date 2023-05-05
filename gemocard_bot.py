@@ -268,7 +268,9 @@ def setting_save():
                 db.session.commit()
                 return render_template('settings.html', contract=contract)
             elif contract.device_type == 'gsm' and request.form.get('device_type') == 'bluetooth':
-                contract.login = None
+                contract.device_type = 'bluetooth'
+                gemocard_api.unsubscribe(contract.uuid)
+                contract.login = ''
                 send_init_message(contract)
             else:
                 contract.patient = int(request.form.get('patient', 0))

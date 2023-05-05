@@ -40,7 +40,7 @@ def send_init_message(contract):
     medsenger_api.send_message(contract.id,
                                'Если у вас есть тонометр Гемодин / Гемокард, данные от давлении и ЭКГ могут автоматически поступать врачу. Для этого Вам нужно скачать приложение <strong>Medsenger Gemocard</strong>, а затем нажать на кнопку "Подключить тономер" ниже.',
                                action_link=f"https://gemocard.medsenger.ru/app?agent_token={answer.get('agent_token')}&contract_id={contract.id}",
-                               action_type='url')
+                               action_type='url', action_name='Подключить тономер')
 
 
 @app.route('/status', methods=['POST'])

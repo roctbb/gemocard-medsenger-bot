@@ -3,7 +3,7 @@ import json
 import datetime
 from config import *
 import gemocard_api
-from medsenger_api import AgentApiClient
+from medsenger_api import AgentApiClient, prepare_binary
 from flask_sqlalchemy import SQLAlchemy
 from uuid import uuid4
 from datetime import timezone
@@ -27,12 +27,20 @@ class Contract(db.Model):
     login = db.Column(db.String(255), default='')
     patient = db.Column(db.Integer, default=0)
     uuid = db.Column(db.String(255), default='')
+    device_type = db.Column(db.String(32), default='gsm')
 
 
 try:
     db.create_all()
 except:
     print('cant create structure')
+
+def send_init_message(contract):
+    answer = medsenger_api.get_agent_token(contract.id)
+    medsenger_api.send_message(contract.id,
+                               'Если у вас есть тонометр Гемодин / Гемокард, данные от давлении и ЭКГ могут автоматически поступать врачу. Для этого Вам нужно скачать приложение <strong>Medsenger Gemocard</strong>, а затем нажать на кнопку "Подключить тономер" ниже.',
+                               action_link=f"https://gemocard.medsenger.ru/app?agent_token={answer.get('agent_token')}&contract_id={contract.id}",
+                               action_type='url')
 
 
 @app.route('/status', methods=['POST'])
@@ -76,6 +84,10 @@ def init():
             print("{}: Add contract {}".format(gts(), contract.id))
 
         if 'params' in data:
+            if data.get('params', {}).get('gemocard_device_type', '') == 'bluetooth':
+                print(gts(), "Device type set to bluetooth for {}".format(contract.uuid))
+                contract.device_type = 'bluetooth'
+
             if data.get('params', {}).get('gemocard_login'):
                 contract.login = data['params']['gemocard_login']
 
@@ -86,15 +98,23 @@ def init():
                 except:
                     pass
 
-        if contract.login and contract.patient:
-            if gemocard_api.subscribe(contract.login, contract.patient, contract.uuid):
-                print(gts(), "Subscribed {}".format(contract.uuid))
+        if contract.login:
+            if contract.device_type == 'bluetooth':
+                try:
+                    gemocard_api.unsubscribe(contract.uuid)
+                except:
+                    pass
             else:
-                print(gts(), "Not subscribed {}".format(contract.uuid))
+                if gemocard_api.subscribe(contract.login, contract.patient, contract.uuid):
+                    print(gts(), "Subscribed {}".format(contract.uuid))
+                else:
+                    print(gts(), "Not subscribed {}".format(contract.uuid))
 
         medsenger_api.add_record(data.get('contract_id'), 'doctor_action',
                                  'Подключен прибор "Гемокард" (логин {}).'.format(contract.login))
 
+        if contract.device_type == 'bluetooth':
+            send_init_message(contract)
         db.session.commit()
 
 
@@ -123,7 +143,7 @@ def remove():
             contract.active = False
             db.session.commit()
 
-            if contract.login and contract.patient:
+            if contract.login:
                 if gemocard_api.unsubscribe(contract.uuid):
                     print("{}: Unsubscribed {}".format(gts(), contract.uuid))
                 else:
@@ -195,7 +215,8 @@ def receive():
                         text = "Заключение ЭКГ: {}".format(text)
                         medsenger_api.add_record(contract.id, "information", text)
 
-                    medsenger_api.send_message(contract.id, text, only_doctor=True, attachments=[["ecg.pdf", "application/pdf", filedata]])
+                    medsenger_api.send_message(contract.id, text, only_doctor=True,
+                                               attachments=[["ecg.pdf", "application/pdf", filedata]])
 
 
         else:
@@ -219,7 +240,7 @@ def settings():
         if query.count() != 0:
             contract = query.first()
         else:
-            return "<strong>Ошибка. Контракт не найден.</strong> Попробуйте отключить и снова подключить интеллектуальный агент к каналу консультирвоания.  Если это не сработает, свяжитесь с технической поддержкой."
+            return "<strong>Ошибка. Контракт не найден.</strong> Попробуйте отключить и снова подключить интеллектуальный агент к каналу консультирования.  Если это не сработает, свяжитесь с технической поддержкой."
 
     except Exception as e:
         print(e)
@@ -227,7 +248,77 @@ def settings():
 
     return render_template('settings.html', contract=contract, error='')
 
+@app.route('/settings', methods=['POST'])
+def setting_save():
+    key = request.args.get('api_key', '')
 
+    if key != API_KEY:
+        return "<strong>Некорректный ключ доступа.</strong> Свяжитесь с технической поддержкой."
+
+    try:
+        contract_id = int(request.args.get('contract_id'))
+        query = Contract.query.filter_by(id=contract_id)
+
+        if query.count() != 0:
+            # TODO: check login
+            contract = query.first()
+
+            if contract.device_type == 'bluetooth' and request.form.get('device_type') == 'gsm':
+                contract.device_type = 'gsm'
+                db.session.commit()
+                return render_template('settings.html', contract=contract)
+            elif contract.device_type == 'gsm' and request.form.get('device_type') == 'bluetooth':
+                contract.login = None
+                send_init_message(contract)
+            else:
+                contract.patient = int(request.form.get('patient', 0))
+                contract.login = request.form.get('login', '')
+
+            if not contract.login:
+                gemocard_api.unsubscribe(contract.uuid)
+            elif not gemocard_api.subscribe(contract.login, contract.patient, contract.uuid):
+                return render_template('settings.html', contract=contract, error='Логин не найден')
+            db.session.commit()
+        else:
+            return "<strong>Ошибка. Контракт не найден.</strong> Попробуйте отключить и снова подключить интеллектуальный агент к каналу консультирвоания.  Если это не сработает, свяжитесь с технической поддержкой."
+
+    except Exception as e:
+        print(e)
+        return "error"
+
+    return """
+        <strong>Спасибо, окно можно закрыть</strong><script>window.parent.postMessage('close-modal-success','*');</script>
+        """
+
+
+
+@app.route('/api/connect', methods=['POST'])
+def connect():
+    data = request.json
+
+    if not data:
+        abort(422, "No json")
+
+    contract_id = data.get('contract_id')
+
+    if not contract_id:
+        abort(422, "No contract_id")
+
+    contract = Contract.query.filter_by(id=contract_id).first()
+    if not contract or not contract.is_active:
+        abort(422, "Contract not found")
+
+    agent_token = data.get('agent_token')
+    if not agent_token:
+        abort(422, "No agent_token")
+
+    answer = medsenger_api.get_agent_token(contract_id)
+
+    if not answer or answer.get('agent_token') != agent_token:
+        abort(422, "Incorrect token")
+
+    medsenger_api.send_message(contract.id, "Тонометр успешно подключен. Чтобы отправить давление или ЭКГ врачу, включите тономер, сделайте измерение и после измерения зайдите в приложение Medsenger Gemocard.")
+    return "ok"
 @app.route('/api/receive', methods=['POST'])
 def receive_data_from_app():
     data = request.json
@@ -260,41 +351,50 @@ def receive_data_from_app():
         medsenger_api.add_records(contract_id, package, timestamp)
         return "ok"
     else:
+        abort(422, "No measurement")
+
+@app.route('/api/receive_ecg', methods=['POST'])
+def receive_ecg():
+    contract_id = request.form.get('contract_id')
+
+    if not contract_id:
+        abort(422, "No contract_id")
+
+    agent_token = request.form.get('agent_token')
+
+    if not agent_token:
+        abort(422, "No agent_token")
+
+    answer = medsenger_api.get_agent_token(contract_id)
+
+    if not answer or answer.get('agent_token') != agent_token:
+        abort(422, "Incorrect token")
+
+    if 'ecg' in request.files:
+        file = request.files['ecg']
+        filename = file.filename
+        data = file.read()
+
+        if not filename or not data:
+            abort(422, "No filename")
+        else:
+            medsenger_api.send_message(contract_id, "Результаты снятия ЭКГ c Сердечка.", send_from='patient', need_answer=True, attachments=[prepare_binary(filename, data)])
+            return 'ok'
+
+    else:
         abort(422, "No file")
 
 
-@app.route('/settings', methods=['POST'])
-def setting_save():
-    key = request.args.get('api_key', '')
-
-    if key != API_KEY:
-        return "<strong>Некорректный ключ доступа.</strong> Свяжитесь с технической поддержкой."
-
-    try:
-        contract_id = int(request.args.get('contract_id'))
-        query = Contract.query.filter_by(id=contract_id)
-        if query.count() != 0:
-            # TODO: check login
-            contract = query.first()
-            contract.patient = int(request.form.get('patient', 0))
-            contract.login = request.form.get('login', 0)
-
-            if not contract.login:
-                gemocard_api.unsubscribe(contract.uuid)
-            elif not gemocard_api.subscribe(contract.login, contract.patient, contract.uuid):
-                return render_template('settings.html', contract=contract, error='Логин не найден')
-            db.session.commit()
-        else:
-            return "<strong>Ошибка. Контракт не найден.</strong> Попробуйте отключить и снова подключить интеллектуальный агент к каналу консультирвоания.  Если это не сработает, свяжитесь с технической поддержкой."
-
-    except Exception as e:
-        print(e)
-        return "error"
-
+@app.route('/api/receive_ecg', methods=['GET'])
+def receive_ecg_test():
     return """
-        <strong>Спасибо, окно можно закрыть</strong><script>window.parent.postMessage('close-modal-success','*');</script>
-        """
-
+    <form method="POST" enctype="multipart/form-data">
+        contract_id <input name="contract_id"><br>
+        agent_token <input name="agent_token"><br>
+        ecg <input name="ecg" type="file"><br>
+        <button>go</button>
+    </form>
+    """
 
 @app.route('/message', methods=['POST'])
 def save_message():
@@ -305,6 +405,10 @@ def save_message():
         return "<strong>Некорректный ключ доступа.</strong> Свяжитесь с технической поддержкой."
 
     return "ok"
+
+@app.route('/app', methods=['GET'])
+def app_page():
+    return render_template('get_app.html')
 
 
 @app.route('/.well-known/apple-app-site-association')

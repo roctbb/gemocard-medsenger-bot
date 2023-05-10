@@ -71,7 +71,7 @@ def order():
         print('invalid key')
         return 'invalid key'
 
-    if data.get('order') in ('gemocard_request_pressure', 'gemocard_request_ecg'):
+    if data.get('order') in ('gemocard_request_pressure', 'gemocard_request_ecg', 'gemocard_request_pressure_ecg'):
         try:
             contract_id = data['contract_id']
             query = Contract.query.filter_by(id=contract_id, active=True)
@@ -84,6 +84,11 @@ def order():
                     medsenger_api.send_message(contract_id,
                                                "Пожалуйста, сделайте ЭКГ с помощью тонометра Гемокард в приложении и отправьте результат врачу.",
                                                link, "Сделать ЭКГ", only_patient=True, action_type="url")
+                elif data.get('order') == 'gemocard_request_pressure_ecg':
+                    link = f"https://gemocard.medsenger.ru/app/?contract_id={contract_id}&agent_token={agent_token.get('agent_token')}&type=pressure_ecg"
+                    medsenger_api.send_message(contract_id,
+                                               "Пожалуйста, сделайте ЭКГ с измерением давления с помощью тонометра Гемокард в приложении и отправьте результат врачу.",
+                                               link, "Сделать ЭКГ с измерением давления", only_patient=True, action_type="url")
                 else:
                     link = f"https://gemocard.medsenger.ru/app/?contract_id={contract_id}&agent_token={agent_token.get('agent_token')}&type=pressure"
                     medsenger_api.send_message(contract_id,

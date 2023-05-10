@@ -128,7 +128,7 @@ def init():
             print("{}: Add contract {}".format(gts(), contract.id))
 
         if 'params' in data:
-            if data.get('params', {}).get('gemocard_device_type', '') == 'bluetooth':
+            if data.get('params', {}).get('gemocard_device_type', '') == 'bluetooth' or data.get('params', {}).get('gemocard_bluetooth', ''):
                 print(gts(), "Device type set to bluetooth for {}".format(contract.uuid))
                 contract.device_type = 'bluetooth'
 

@@ -307,7 +307,7 @@ def connect():
         abort(422, "No contract_id")
 
     contract = Contract.query.filter_by(id=contract_id).first()
-    if not contract or not contract.is_active:
+    if not contract or not contract.active:
         abort(422, "Contract not found")
 
     agent_token = data.get('agent_token')

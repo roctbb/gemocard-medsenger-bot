@@ -35,11 +35,12 @@ try:
 except:
     print('cant create structure')
 
+
 def send_init_message(contract):
     answer = medsenger_api.get_agent_token(contract.id)
     medsenger_api.send_message(contract.id,
                                'Если у вас есть тонометр Гемодин / Гемокард, данные от давлении и ЭКГ могут автоматически поступать врачу. Для этого Вам нужно скачать приложение <strong>Medsenger Gemocard</strong>, а затем нажать на кнопку "Подключить тономер" ниже.',
-                               action_link=f"https://gemocard.medsenger.ru/app?agent_token={answer.get('agent_token')}&contract_id={contract.id}",
+                               action_link=f"https://gemocard.medsenger.ru/app?agent_token={answer.get('agent_token')}&contract_id={contract.id}&type=connect",
                                action_type='url', action_name='Подключить тономер')
 
 
@@ -60,6 +61,44 @@ def status():
     print(answer)
 
     return json.dumps(answer)
+
+
+@app.route('/order', methods=['POST'])
+def order():
+    data = request.json
+
+    if data['api_key'] != API_KEY:
+        print('invalid key')
+        return 'invalid key'
+
+    if data.get('order') in ('gemocard_request_pressure', 'gemocard_request_ecg'):
+        try:
+            contract_id = data['contract_id']
+            query = Contract.query.filter_by(id=contract_id, active=True)
+
+            if query.count() != 0:
+                agent_token = medsenger_api.get_agent_token(contract_id)
+
+                if data.get('order') == 'gemocard_request_ecg':
+                    link = f"https://gemocard.medsenger.ru/app/?contract_id={contract_id}&agent_token={agent_token.get('agent_token')}&type=ecg"
+                    medsenger_api.send_message(contract_id,
+                                               "Пожалуйста, сделайте ЭКГ с помощью тонометра Гемокард в приложении и отправьте результат врачу.",
+                                               link, "Сделать ЭКГ", only_patient=True, action_type="url")
+                else:
+                    link = f"https://gemocard.medsenger.ru/app/?contract_id={contract_id}&agent_token={agent_token.get('agent_token')}&type=pressure"
+                    medsenger_api.send_message(contract_id,
+                                               "Пожалуйста, измерьте давление с помощью тонометра Гемодин / Гемокард в приложении и отправьте результат врачу.",
+                                               link, "Измерить давление", only_patient=True, action_type="url")
+                return 'ok'
+            else:
+                print('contract not found')
+
+
+        except Exception as e:
+            print(e)
+        return "error"
+
+    return "not supported"
 
 
 @app.route('/init', methods=['POST'])
@@ -248,6 +287,7 @@ def settings():
 
     return render_template('settings.html', contract=contract, error='')
 
+
 @app.route('/settings', methods=['POST'])
 def setting_save():
     key = request.args.get('api_key', '')
@@ -293,7 +333,6 @@ def setting_save():
         """
 
 
-
 @app.route('/api/connect', methods=['POST'])
 def connect():
     data = request.json
@@ -319,8 +358,11 @@ def connect():
     if not answer or answer.get('agent_token') != agent_token:
         abort(422, "Incorrect token")
 
-    medsenger_api.send_message(contract.id, "Тонометр успешно подключен. Чтобы отправить давление или ЭКГ врачу, включите тономер, сделайте измерение и после измерения зайдите в приложение Medsenger Gemocard.")
+    medsenger_api.send_message(contract.id,
+                               "Тонометр успешно подключен. Чтобы отправить давление или ЭКГ врачу, включите тономер, сделайте измерение и после измерения зайдите в приложение Medsenger Gemocard.")
     return "ok"
+
+
 @app.route('/api/receive', methods=['POST'])
 def receive_data_from_app():
     data = request.json
@@ -355,6 +397,7 @@ def receive_data_from_app():
     else:
         abort(422, "No measurement")
 
+
 @app.route('/api/receive_ecg', methods=['POST'])
 def receive_ecg():
     contract_id = request.form.get('contract_id')
@@ -380,7 +423,8 @@ def receive_ecg():
         if not filename or not data:
             abort(422, "No filename")
         else:
-            medsenger_api.send_message(contract_id, "Результаты снятия ЭКГ.", send_from='patient', need_answer=True, attachments=[prepare_binary(filename, data)])
+            medsenger_api.send_message(contract_id, "Результаты снятия ЭКГ.", send_from='patient', need_answer=True,
+                                       attachments=[prepare_binary(filename, data)])
             return 'ok'
 
     else:
@@ -398,6 +442,7 @@ def receive_ecg_test():
     </form>
     """
 
+
 @app.route('/message', methods=['POST'])
 def save_message():
     data = request.json
@@ -408,6 +453,7 @@ def save_message():
 
     return "ok"
 
+
 @app.route('/app', methods=['GET'])
 def app_page():
     return render_template('get_app.html')
@@ -415,7 +461,8 @@ def app_page():
 
 @app.route('/.well-known/apple-app-site-association')
 def apple_deeplink():
-    return jsonify({"applinks": {"apps": [], "details": [{"appID": "CRF22TKXX5.ru.medsenger.gemocard", "paths": ["*"]}]}})
+    return jsonify(
+        {"applinks": {"apps": [], "details": [{"appID": "CRF22TKXX5.ru.medsenger.gemocard", "paths": ["*"]}]}})
 
 
 if __name__ == "__main__":

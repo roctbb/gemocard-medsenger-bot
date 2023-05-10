@@ -80,17 +80,17 @@ def order():
                 agent_token = medsenger_api.get_agent_token(contract_id)
 
                 if data.get('order') == 'gemocard_request_ecg':
-                    link = f"https://gemocard.medsenger.ru/app/?contract_id={contract_id}&agent_token={agent_token.get('agent_token')}&type=ecg"
+                    link = f"https://gemocard.medsenger.ru/app?contract_id={contract_id}&agent_token={agent_token.get('agent_token')}&type=ecg"
                     medsenger_api.send_message(contract_id,
                                                "Пожалуйста, сделайте ЭКГ с помощью тонометра Гемокард в приложении и отправьте результат врачу.",
                                                link, "Сделать ЭКГ", only_patient=True, action_type="url")
                 elif data.get('order') == 'gemocard_request_pressure_ecg':
-                    link = f"https://gemocard.medsenger.ru/app/?contract_id={contract_id}&agent_token={agent_token.get('agent_token')}&type=pressure_ecg"
+                    link = f"https://gemocard.medsenger.ru/app?contract_id={contract_id}&agent_token={agent_token.get('agent_token')}&type=pressure_ecg"
                     medsenger_api.send_message(contract_id,
                                                "Пожалуйста, сделайте ЭКГ с измерением давления с помощью тонометра Гемокард в приложении и отправьте результат врачу.",
                                                link, "Сделать ЭКГ с измерением давления", only_patient=True, action_type="url")
                 else:
-                    link = f"https://gemocard.medsenger.ru/app/?contract_id={contract_id}&agent_token={agent_token.get('agent_token')}&type=pressure"
+                    link = f"https://gemocard.medsenger.ru/app?contract_id={contract_id}&agent_token={agent_token.get('agent_token')}&type=pressure"
                     medsenger_api.send_message(contract_id,
                                                "Пожалуйста, измерьте давление с помощью тонометра Гемодин / Гемокард в приложении и отправьте результат врачу.",
                                                link, "Измерить давление", only_patient=True, action_type="url")

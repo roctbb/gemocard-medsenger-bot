@@ -380,7 +380,7 @@ def receive_ecg():
         if not filename or not data:
             abort(422, "No filename")
         else:
-            medsenger_api.send_message(contract_id, "Результаты снятия ЭКГ c Сердечка.", send_from='patient', need_answer=True, attachments=[prepare_binary(filename, data)])
+            medsenger_api.send_message(contract_id, "Результаты снятия ЭКГ.", send_from='patient', need_answer=True, attachments=[prepare_binary(filename, data)])
             return 'ok'
 
     else:

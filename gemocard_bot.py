@@ -39,7 +39,7 @@ except:
 def send_init_message(contract):
     answer = medsenger_api.get_agent_token(contract.id)
     medsenger_api.send_message(contract.id,
-                               'Если у вас есть тонометр Гемодин / Гемокард, данные от давлении и ЭКГ могут автоматически поступать врачу. Для этого Вам нужно скачать приложение <strong>Medsenger Gemocard</strong>, а затем нажать на кнопку "Подключить тономер" ниже.',
+                               'Если у вас есть тонометр Гемодин / Гемокард, данные от давлении и ЭКГ могут автоматически поступать врачу. Для этого Вам нужно скачать приложение <strong>Medsenger АКСМА</strong>, а затем нажать на кнопку "Подключить тономер" ниже.',
                                action_link=f"https://gemocard.medsenger.ru/app?agent_token={answer.get('agent_token')}&contract_id={contract.id}&type=connect",
                                action_type='url', action_name='Подключить тономер')
 
@@ -155,7 +155,7 @@ def init():
                     print(gts(), "Not subscribed {}".format(contract.uuid))
 
         medsenger_api.add_record(data.get('contract_id'), 'doctor_action',
-                                 'Подключен прибор "Гемокард" (логин {}).'.format(contract.login))
+                                 'Подключен прибор "Гемокард / Гемодин" (логин {}).'.format(contract.login))
 
         if contract.device_type == 'bluetooth':
             send_init_message(contract)
@@ -196,7 +196,7 @@ def remove():
             print("{}: Deactivate contract {}".format(gts(), contract.id))
 
             medsenger_api.add_record(data.get('contract_id'), 'doctor_action',
-                                     'Отключен прибор "Гемокард" (логин {}).'.format(contract.login))
+                                     'Отключен прибор "Гемокард / Гемодин" (логин {}).'.format(contract.login))
 
         else:
             print('contract not found')

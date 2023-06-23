@@ -473,7 +473,7 @@ def apple_deeplink():
 
 
 @app.route('/.well-known/assetlinks.json')
-def apple_deeplink():
+def android_deeplink():
     return jsonify([
         {
             "relation": ["delegate_permission/common.handle_all_urls"],

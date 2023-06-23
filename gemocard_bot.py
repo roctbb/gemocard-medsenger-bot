@@ -88,7 +88,8 @@ def order():
                     link = f"https://gemocard.medsenger.ru/app?contract_id={contract_id}&agent_token={agent_token.get('agent_token')}&type=pressure_ecg"
                     medsenger_api.send_message(contract_id,
                                                "Пожалуйста, сделайте ЭКГ с измерением давления с помощью тонометра Гемокард в приложении и отправьте результат врачу.",
-                                               link, "Сделать ЭКГ с измерением давления", only_patient=True, action_type="url")
+                                               link, "Сделать ЭКГ с измерением давления", only_patient=True,
+                                               action_type="url")
                 else:
                     link = f"https://gemocard.medsenger.ru/app?contract_id={contract_id}&agent_token={agent_token.get('agent_token')}&type=pressure"
                     medsenger_api.send_message(contract_id,
@@ -128,7 +129,8 @@ def init():
             print("{}: Add contract {}".format(gts(), contract.id))
 
         if 'params' in data:
-            if data.get('params', {}).get('gemocard_device_type', '') == 'bluetooth' or data.get('params', {}).get('gemocard_bluetooth', ''):
+            if data.get('params', {}).get('gemocard_device_type', '') == 'bluetooth' or data.get('params', {}).get(
+                    'gemocard_bluetooth', ''):
                 print(gts(), "Device type set to bluetooth for {}".format(contract.uuid))
                 contract.device_type = 'bluetooth'
 
@@ -468,6 +470,21 @@ def app_page():
 def apple_deeplink():
     return jsonify(
         {"applinks": {"apps": [], "details": [{"appID": "CRF22TKXX5.ru.medsenger.gemocard", "paths": ["*"]}]}})
+
+
+@app.route('/.well-known/assetlinks.json')
+def apple_deeplink():
+    return jsonify([
+        {
+            "relation": ["delegate_permission/common.handle_all_urls"],
+            "target": {
+                "namespace": "android_app",
+                "package_name": "ru.medsenger.acsma",
+                "sha256_cert_fingerprints":
+                    ["2D:70:5C:6F:C7:C7:CE:E1:2C:79:3B:F9:BE:EB:C9:7F:E8:9A:D1:C0:7D:CC:9D:80:93:01:2D:51:EA:3F:FA:57"]
+            }
+        }
+    ])
 
 
 if __name__ == "__main__":

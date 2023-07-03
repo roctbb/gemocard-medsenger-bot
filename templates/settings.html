@@ -1,39 +1,41 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
     <title>Gemocard Gemodin: настройка интеграции</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
-          integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
 </head>
 <body>
 <div class="container">
     <h4 style="margin-top: 15px; margin-bottom: 15px;">Gemocard / Gemodin: настройка интеграции</h4>
 
     {% if error %}
-        <p><strong style="color: red">{{ error }}</strong></p>
+        <div class="alert alert-danger mb-3" role="alert">{{ error }}</div>
     {% endif %}
 
     {% if contract.device_type == 'gsm' %}
 
         <form method="POST">
 
-            <div class="form-group">
-                <strong>Тип прибора:</strong>
-                <select name="device_type" class="form-control">
+            <div class="mb-3">
+                <label for="device_type1" class="form-label">Тип прибора:</label>
+                <select name="device_type" class="form-select" id="device_type1">
                     <option value="gsm" selected>GSM</option>
                     <option value="bluetooth">Bluetooth</option>
                 </select>
             </div>
 
-            <div class="form-group">
-                <strong>Логин:</strong>
-                <input type="text" class="form-control" name="login" value="{{ contract['login'] }}"/>
+            <div class="mb-3">
+                <label for="login1" class="form-label">Логин:</label>
+                <input type="text" class="form-control" name="login" id="login1" value="{{ contract['login'] }}"/>
             </div>
 
-            <div class="form-group">
-                <strong>Прием данных:</strong>
-                <select name="patient" class="form-control">
+            <div class="mb-3">
+                <label for="patient1" class="form-label">Прием данных:</label>
+                <select name="patient" class="form-select" id="patient1">
                     <option value="0"{% if contract['patient'] == 0 %} selected {% endif %}>С обоих пользователей
                         прибора
                     </option>
@@ -45,24 +47,18 @@
                     </option>
                 </select>
             </div>
-            <div class="form-group">
-                <button class="btn-lg btn btn-success">Сохранить</button>
-            </div>
+            <button class="btn-lg btn btn-success">Сохранить</button>
         </form>
     {% else %}
         <form method="POST">
-
-            <div class="form-group">
-                <strong>Тип прибора:</strong>
-                <select name="device_type" class="form-control">
+            <div class="mb-3">
+                <label for="device_type2" class="form-label">Тип прибора:</label>
+                <select name="device_type" class="form-select" id="device_type2">
                     <option value="gsm">GSM</option>
                     <option value="bluetooth" selected>Bluetooth</option>
                 </select>
             </div>
-
-            <div class="form-group">
-                <button class="btn-lg btn btn-success">Сохранить</button>
-            </div>
+            <button class="btn-lg btn btn-success">Сохранить</button>
         </form>
     {% endif %}
 </div>

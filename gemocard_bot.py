@@ -6,7 +6,6 @@ import gemocard_api
 from medsenger_api import AgentApiClient, prepare_binary
 from flask_sqlalchemy import SQLAlchemy
 from uuid import uuid4
-from datetime import timezone
 
 medsenger_api = AgentApiClient(API_KEY, MAIN_HOST, AGENT_ID, API_DEBUG)
 
@@ -39,9 +38,12 @@ except:
 def send_init_message(contract):
     answer = medsenger_api.get_agent_token(contract.id)
     medsenger_api.send_message(contract.id,
-                               'Если у вас есть тонометр Гемодин / Гемокард, данные от давлении и ЭКГ могут автоматически поступать врачу. Для этого Вам нужно скачать приложение <strong>Medsenger АКСМА</strong>, а затем нажать на кнопку "Подключить тономер" ниже.',
-                               action_link=f"https://gemocard.medsenger.ru/app?agent_token={answer.get('agent_token')}&contract_id={contract.id}&type=connect",
-                               action_type='url', action_name='Подключить тономер')
+                               'Если у вас есть тонометр Гемодин / Гемокард, данные от давлении и ЭКГ могут '
+                               'автоматически поступать врачу. Для этого Вам нужно скачать приложение '
+                               '<strong>Medsenger АКСМА</strong>, а затем нажать на кнопку "Подключить тонометр" ниже.',
+                               action_link=f"https://gemocard.medsenger.ru/app?agent_token={answer.get('agent_token')}&"
+                                           f"contract_id={contract.id}&type=connect",
+                               action_type='url', action_name='Подключить тонометр')
 
 
 @app.route('/status', methods=['POST'])
@@ -80,25 +82,30 @@ def order():
                 agent_token = medsenger_api.get_agent_token(contract_id)
 
                 if data.get('order') == 'gemocard_request_ecg':
-                    link = f"https://gemocard.medsenger.ru/app?contract_id={contract_id}&agent_token={agent_token.get('agent_token')}&type=ecg"
+                    link = f"https://gemocard.medsenger.ru/app?contract_id={contract_id}&" \
+                           f"agent_token={agent_token.get('agent_token')}&type=ecg"
                     medsenger_api.send_message(contract_id,
-                                               "Пожалуйста, сделайте ЭКГ с помощью тонометра Гемокард в приложении и отправьте результат врачу.",
+                                               "Пожалуйста, сделайте ЭКГ с помощью тонометра Гемокард в приложении и "
+                                               "отправьте результат врачу.",
                                                link, "Сделать ЭКГ", only_patient=True, action_type="url")
                 elif data.get('order') == 'gemocard_request_pressure_ecg':
-                    link = f"https://gemocard.medsenger.ru/app?contract_id={contract_id}&agent_token={agent_token.get('agent_token')}&type=pressure_ecg"
+                    link = f"https://gemocard.medsenger.ru/app?contract_id={contract_id}&" \
+                           f"agent_token={agent_token.get('agent_token')}&type=pressure_ecg"
                     medsenger_api.send_message(contract_id,
-                                               "Пожалуйста, сделайте ЭКГ с измерением давления с помощью тонометра Гемокард в приложении и отправьте результат врачу.",
+                                               "Пожалуйста, сделайте ЭКГ с измерением давления с помощью тонометра "
+                                               "Гемокард в приложении и отправьте результат врачу.",
                                                link, "Сделать ЭКГ с измерением давления", only_patient=True,
                                                action_type="url")
                 else:
-                    link = f"https://gemocard.medsenger.ru/app?contract_id={contract_id}&agent_token={agent_token.get('agent_token')}&type=pressure"
+                    link = f"https://gemocard.medsenger.ru/app?contract_id={contract_id}&" \
+                           f"agent_token={agent_token.get('agent_token')}&type=pressure"
                     medsenger_api.send_message(contract_id,
-                                               "Пожалуйста, измерьте давление с помощью тонометра Гемодин / Гемокард в приложении и отправьте результат врачу.",
+                                               "Пожалуйста, измерьте давление с помощью тонометра Гемодин / Гемокард "
+                                               "в приложении и отправьте результат врачу.",
                                                link, "Измерить давление", only_patient=True, action_type="url")
                 return 'ok'
             else:
                 print('contract not found')
-
 
         except Exception as e:
             print(e)
@@ -162,7 +169,6 @@ def init():
         if contract.device_type == 'bluetooth':
             send_init_message(contract)
         db.session.commit()
-
 
     except Exception as e:
         print(e)
@@ -264,7 +270,6 @@ def receive():
                     medsenger_api.send_message(contract.id, text, only_doctor=True,
                                                attachments=[["ecg.pdf", "application/pdf", filedata]])
 
-
         else:
             print("Contract {} not found!".format(uid))
     else:
@@ -286,7 +291,9 @@ def settings():
         if query.count() != 0:
             contract = query.first()
         else:
-            return "<strong>Ошибка. Контракт не найден.</strong> Попробуйте отключить и снова подключить интеллектуальный агент к каналу консультирования.  Если это не сработает, свяжитесь с технической поддержкой."
+            return "<strong>Ошибка. Контракт не найден.</strong> Попробуйте отключить и снова подключить " \
+                   "интеллектуальный агент к каналу консультирования.  Если это не сработает, свяжитесь с " \
+                   "технической поддержкой."
 
     except Exception as e:
         print(e)
@@ -329,14 +336,16 @@ def setting_save():
                 return render_template('settings.html', contract=contract, error='Логин не найден')
             db.session.commit()
         else:
-            return "<strong>Ошибка. Контракт не найден.</strong> Попробуйте отключить и снова подключить интеллектуальный агент к каналу консультирвоания.  Если это не сработает, свяжитесь с технической поддержкой."
+            return "<strong>Ошибка. Контракт не найден.</strong> Попробуйте отключить и снова подключить " \
+                   "интеллектуальный агент к каналу консультирования.  Если это не сработает, свяжитесь с " \
+                   "технической поддержкой."
 
     except Exception as e:
         print(e)
         return "error"
 
     return """
-        <strong>Спасибо, окно можно закрыть</strong><script>window.parent.postMessage('close-modal-success','*');</script>
+    <strong>Спасибо, окно можно закрыть</strong><script>window.parent.postMessage('close-modal-success','*');</script>
         """
 
 
@@ -366,7 +375,8 @@ def connect():
         abort(422, "Incorrect token")
 
     medsenger_api.send_message(contract.id,
-                               "Тонометр успешно подключен. Чтобы отправить давление или ЭКГ врачу, включите тономер, сделайте измерение и после измерения зайдите в приложение Medsenger Gemocard.")
+                               "Тонометр успешно подключен. Чтобы отправить давление или ЭКГ врачу, включите тонометр, "
+                               "сделайте измерение и после измерения зайдите в приложение Medsenger Gemocard.")
     return "ok"
 
 

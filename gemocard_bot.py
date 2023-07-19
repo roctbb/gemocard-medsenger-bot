@@ -1,3 +1,5 @@
+import collections
+
 from flask import Flask, request, render_template, abort, jsonify
 import json
 import datetime
@@ -6,6 +8,9 @@ import gemocard_api
 from medsenger_api import AgentApiClient, prepare_binary
 from flask_sqlalchemy import SQLAlchemy
 from uuid import uuid4
+
+from ecg_generator.ecg_generator import render_png
+from ecg_generator.sample_rate import SampleRate
 
 medsenger_api = AgentApiClient(API_KEY, MAIN_HOST, AGENT_ID, API_DEBUG)
 
@@ -53,7 +58,7 @@ def status():
     if data['api_key'] != API_KEY:
         return 'invalid key'
 
-    contract_ids = [l[0] for l in db.session.query(Contract.id).filter_by(active=True).all()]
+    contract_ids = [c[0] for c in db.session.query(Contract.id).filter_by(active=True).all()]
 
     answer = {
         "is_tracking_data": True,
@@ -459,6 +464,47 @@ def receive_ecg_test():
     </form>
     """
 
+
+@app.route('/api/receive_raw_ecg', methods=['POST'])
+def receive_raw_ecg():
+    data = request.json
+    if not data:
+        abort(400, "Failed to get data or parse JSON.")
+
+    agent_token = data.get('agent_token')
+    if not agent_token:
+        abort(401, "Failed to get agent_token.")
+
+    contract_id = data.get('contract_id')
+    if not contract_id:
+        abort(400, "Failed to get contract_id.")
+
+    ecg_data = data.get('ecg_data')
+    if not isinstance(ecg_data, collections.Sequence):
+        abort(422, f"ecg_data must be array of int, but got {type(ecg_data)}.")
+    if not all(v.isDigit() for v in ecg_data):
+        abort(422, f"ecg_data must be array of int, but got {type(ecg_data)}.")
+
+    try:
+        sample_rate = SampleRate(
+            int(data.get('sample_rate'))
+        )
+    except ValueError:
+        abort(400, "Failed to get sample_rate.")
+        return
+
+    answer = medsenger_api.get_agent_token(contract_id)
+
+    if not answer or answer.get('agent_token') != agent_token:
+        abort(403, "Incorrect token.")
+
+    buffer_file = render_png(ecg_data, sample_rate)
+
+    medsenger_api.send_message(
+        contract_id, "Результаты снятия ЭКГ.",
+        send_from='patient', need_answer=True,
+        attachments=[prepare_binary("ecg_data.png", buffer_file.getbuffer())]
+    )
 
 @app.route('/message', methods=['POST'])
 def save_message():

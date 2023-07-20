@@ -1,15 +1,15 @@
 import collections
-
-from flask import Flask, request, render_template, abort, jsonify
-import json
 import datetime
-from config import *
-import gemocard_api
-from medsenger_api import AgentApiClient, prepare_binary
-from flask_sqlalchemy import SQLAlchemy
+import json
 from uuid import uuid4
 
-from ecg_generator.ecg_generator import render_png
+from flask import Flask, request, render_template, abort, jsonify
+from flask_sqlalchemy import SQLAlchemy
+from medsenger_api import AgentApiClient, prepare_binary
+
+import gemocard_api
+from config import *
+from ecg_generator.file_renderer import render_png
 from ecg_generator.sample_rate import SampleRate
 
 medsenger_api = AgentApiClient(API_KEY, MAIN_HOST, AGENT_ID, API_DEBUG)
@@ -505,6 +505,7 @@ def receive_raw_ecg():
         send_from='patient', need_answer=True,
         attachments=[prepare_binary("ecg_data.png", buffer_file.getbuffer())]
     )
+
 
 @app.route('/message', methods=['POST'])
 def save_message():

@@ -1,8 +1,9 @@
 from abc import ABC, abstractmethod
-from typing import List
+
+import numpy as np
 
 
 class Filter(ABC):
 
     @abstractmethod
-    def filter(self, data: List[float]) -> List[float]: pass
+    def filter(self, data: np.ndarray) -> np.ndarray: pass

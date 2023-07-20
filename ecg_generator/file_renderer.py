@@ -1,8 +1,5 @@
-"""
-ecg_generator.py
-Generates PDF file from RAW UBytes got from Acsma Android application.
-"""
 import io
+import json
 from typing import List
 
 import matplotlib.pyplot as plt
@@ -15,11 +12,13 @@ SECONDS_IN_ROW = 5
 
 
 def render_png(ecg_data: List[int], sample_rate: SampleRate) -> io.BytesIO:
-    filtered_ecg_data = np.array(
-        process_data(ecg_data, sample_rate)
-    )
+    """Generates PDF file from RAW UBytes got from Acsma Android application."""
 
-    ecg_seconds_duration = len(ecg_data) / sample_rate.value
+    ecg_data = np.array(ecg_data)
+
+    filtered_ecg_data = process_data(ecg_data, sample_rate)
+
+    ecg_seconds_duration = ecg_data.size / sample_rate.value
     rows = (ecg_seconds_duration // SECONDS_IN_ROW) + 1
 
     split_ecg_data = np.array_split(filtered_ecg_data, rows)
@@ -40,13 +39,16 @@ def render_png(ecg_data: List[int], sample_rate: SampleRate) -> io.BytesIO:
         ax.minorticks_on()
         ax.plot(np.linspace(SECONDS_IN_ROW * i, SECONDS_IN_ROW * (i + 1), len(ecg_row)), ecg_row)
 
-    buffer = io.BytesIO()
-    fig.savefig(buffer, bbox_inches='tight')
-    return buffer
+    file_buffer = io.BytesIO()
+    fig.savefig(file_buffer, bbox_inches='tight')
+    return file_buffer
 
-# if __name__ == "__main__":
-#     buffer = render_png(test_data, SampleRate.HZ_417_5)
-#
-#     with open("example.png", "wb") as f:
-#         f.write(buffer.getbuffer())
-#
+
+if __name__ == "__main__":
+    with open("/Users/tikhon/Downloads/acsma_ecg_data.txt", "r") as f:
+        test_data = json.load(f)
+
+    buffer = render_png(test_data, SampleRate.HZ_417_5)
+
+    with open("example.png", "wb") as f:
+        f.write(buffer.getbuffer())

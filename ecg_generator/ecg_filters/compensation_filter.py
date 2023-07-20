@@ -1,4 +1,4 @@
-from typing import List
+import numpy as np
 
 from ecg_generator.ecg_filters.filter import Filter
 
@@ -12,8 +12,10 @@ class CompensationFilter(Filter):
     def __init__(self, frequency: float):
         self.frequency = frequency
 
-    def filter(self, data: List[float]) -> List[float]:
-        output_list = [0.] * len(data)
+    def filter(self, data: np.ndarray) -> np.ndarray:
+        print(f"Applying CompensationFilter... for: {data}\n")
+
+        output_list = np.zeros(data.size)
         self.offset = data[0]
 
         for i in range(0, len(data)):
@@ -24,5 +26,3 @@ class CompensationFilter(Filter):
             output_list[i] = data[i] - self.offset
 
         return output_list
-
-

@@ -482,7 +482,7 @@ def receive_raw_ecg():
     ecg_data = data.get('ecg_data')
     if not isinstance(ecg_data, collections.Sequence):
         abort(422, f"ecg_data must be array of int, but got {type(ecg_data)}.")
-    if not all(v.isDigit() for v in ecg_data):
+    if not all(isinstance(v, int) for v in ecg_data):
         abort(422, f"ecg_data must be array of int, but got {type(ecg_data)}.")
 
     try:

@@ -499,11 +499,11 @@ def receive_raw_ecg():
         abort(403, "Incorrect token.")
 
     buffer_file = render_png(ecg_data, sample_rate)
-
+    buffer_file.seek(0)
     medsenger_api.send_message(
         contract_id, "Результаты снятия ЭКГ.",
         send_from='patient', need_answer=True,
-        attachments=[prepare_binary("ecg_data.png", buffer_file.getbuffer())]
+        attachments=[prepare_binary("ecg_data.png", buffer_file.read())]
     )
 
 

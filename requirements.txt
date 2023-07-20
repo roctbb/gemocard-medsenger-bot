@@ -5,6 +5,6 @@ requests
 apscheduler
 medsenger_api
 
-matplotlib~=3.7.2
-numpy~=1.25.1
-scipy~=1.11.1
+matplotlib
+numpy
+scipy

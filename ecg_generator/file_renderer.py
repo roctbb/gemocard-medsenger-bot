@@ -23,8 +23,6 @@ def render_png(ecg_data: List[int], sample_rate: SampleRate) -> io.BytesIO:
 
     split_ecg_data = np.array_split(filtered_ecg_data, rows)
 
-    print(split_ecg_data, ecg_seconds_duration, rows)
-
     fig, axes = plt.subplots(len(split_ecg_data), 1, gridspec_kw={'hspace': 0.1}, figsize=(16.6, 23.4))
 
     for i, (ax, ecg_row) in enumerate(zip(axes, split_ecg_data)):

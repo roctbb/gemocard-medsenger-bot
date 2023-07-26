@@ -506,6 +506,8 @@ def receive_raw_ecg():
         attachments=[prepare_binary("ecg_data.png", buffer_file.read())]
     )
 
+    return "ok"
+
 
 @app.route('/message', methods=['POST'])
 def save_message():

@@ -13,8 +13,6 @@ class CompensationFilter(Filter):
         self.frequency = frequency
 
     def filter(self, data: np.ndarray) -> np.ndarray:
-        print(f"Applying CompensationFilter... for: {data}\n")
-
         output_list = np.zeros(data.size)
         self.offset = data[0]
 

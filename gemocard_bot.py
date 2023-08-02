@@ -43,7 +43,7 @@ except:
 def send_init_message(contract):
     answer = medsenger_api.get_agent_token(contract.id)
     medsenger_api.send_message(contract.id,
-                               'Если у вас есть тонометр Гемодин / Гемокард, данные от давлении и ЭКГ могут '
+                               'Если у вас есть тонометр Гемодин / Гемокард, данные о давлении и ЭКГ могут '
                                'автоматически поступать врачу. Для этого Вам нужно скачать приложение '
                                '<strong>Medsenger АКСМА</strong>, а затем нажать на кнопку "Подключить тонометр" ниже.',
                                action_link=f"https://gemocard.medsenger.ru/app?agent_token={answer.get('agent_token')}&"

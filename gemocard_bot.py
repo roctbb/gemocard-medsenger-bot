@@ -393,7 +393,6 @@ def receive_data_from_app():
         abort(422, "No json")
 
     contract_id = data.get('contract_id')
-
     if not contract_id:
         abort(422, "No contract_id")
 
@@ -405,6 +404,8 @@ def receive_data_from_app():
     if not agent_token:
         abort(422, "No timestamp")
 
+    battery_state = data.get("battery_state")
+
     answer = medsenger_api.get_agent_token(contract_id)
 
     if not answer or answer.get('agent_token') != agent_token:
@@ -413,7 +414,13 @@ def receive_data_from_app():
     if 'measurement' in data:
         package = []
         for category_name, value in data['measurement'].items():
-            package.append((category_name, value))
+            package.append({
+                "category_name": category_name,
+                "value": value,
+                "params": {
+                    "battery_state": battery_state
+                }
+            })
         medsenger_api.add_records(contract_id, package, timestamp)
         return "ok"
     else:

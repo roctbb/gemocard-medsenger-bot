@@ -93,7 +93,7 @@ def order():
                     medsenger_api.send_message(contract_id,
                                                "Пожалуйста, сделайте ЭКГ с помощью тонометра Гемокард в приложении и "
                                                "отправьте результат врачу.",
-                                               link, "Сделать ЭКГ", only_patient=True, action_type="url", action_deadline=int(time.time()) + 3 * 60 * 60)
+                                               link, "Сделать ЭКГ", only_patient=True, action_type="url", action_deadline=int(time.time()) + 6 * 60 * 60)
                 elif data.get('order') == 'gemocard_request_pressure_ecg':
                     link = f"https://gemocard.medsenger.ru/app?contract_id={contract_id}&" \
                            f"agent_token={agent_token.get('agent_token')}&type=pressure_ecg"
@@ -101,14 +101,14 @@ def order():
                                                "Пожалуйста, сделайте ЭКГ с измерением давления с помощью тонометра "
                                                "Гемокард в приложении и отправьте результат врачу.",
                                                link, "Сделать ЭКГ с измерением давления", only_patient=True,
-                                               action_type="url", action_deadline=int(time.time()) + 3 * 60 * 60)
+                                               action_type="url", action_deadline=int(time.time()) + 6 * 60 * 60)
                 else:
                     link = f"https://gemocard.medsenger.ru/app?contract_id={contract_id}&" \
                            f"agent_token={agent_token.get('agent_token')}&type=pressure"
                     medsenger_api.send_message(contract_id,
                                                "Пожалуйста, измерьте давление с помощью тонометра Гемодин / Гемокард "
                                                "в приложении и отправьте результат врачу.",
-                                               link, "Измерить давление", only_patient=True, action_type="url", action_deadline=int(time.time()) + 3 * 60 * 60)
+                                               link, "Измерить давление", only_patient=True, action_type="url", action_deadline=int(time.time()) + 6 * 60 * 60)
                 return 'ok'
             else:
                 print('contract not found')

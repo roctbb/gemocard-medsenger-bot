@@ -8,3 +8,4 @@ medsenger_api
 matplotlib
 numpy
 scipy
+sentry-sdk[flask]

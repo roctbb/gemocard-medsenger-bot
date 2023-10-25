@@ -12,8 +12,14 @@ import gemocard_api
 from config import *
 from ecg_generator.file_renderer import render_png
 from ecg_generator.sample_rate import SampleRate
+import sentry_sdk
 
 medsenger_api = AgentApiClient(API_KEY, MAIN_HOST, AGENT_ID, API_DEBUG)
+
+if SENTRY_DSN:
+    sentry_sdk.init(
+        dsn=SENTRY_DSN,
+    )
 
 app = Flask(__name__)
 db_string = "postgresql://{}:{}@{}:{}/{}".format(DB_LOGIN, DB_PASSWORD, DB_HOST, DB_PORT, DB_DATABASE)

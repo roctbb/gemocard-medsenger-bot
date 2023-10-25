@@ -9,3 +9,4 @@ DB_HOST = ''
 DB_PORT = ''
 DB_DATABASE = ''
 SSL_CONTEXT = []
+SENTRY_DSN =

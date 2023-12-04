@@ -408,7 +408,7 @@ def receive_data_from_app():
         abort(422, "No agent_token")
 
     timestamp = int(data.get('timestamp'))
-    if not agent_token:
+    if not timestamp:
         abort(422, "No timestamp")
 
     battery_state = data.get("battery_state")

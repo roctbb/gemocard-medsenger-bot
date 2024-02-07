@@ -1,1 +1,1 @@
-supervisorctl restart agents-gemocard
+touch /etc/uwsgi/apps/gemocard.ini

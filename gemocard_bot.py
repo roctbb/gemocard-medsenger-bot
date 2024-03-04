@@ -151,15 +151,13 @@ def init():
 
 
         if 'params' in data:
-            # if data.get('params', {}).get('gemocard_device_type', '') == 'bluetooth' or data.get('params', {}).get(
-            #         'gemocard_bluetooth', ''):
-            #     print(gts(), "Device type set to bluetooth for {}".format(contract.uuid))
-            #     contract.device_type = 'bluetooth'
-
             if data.get('params', {}).get('gemocard_device_type', '') == 'gsm' or data.get('params', {}).get(
                     'gemocard_gsm', ''):
-                print(gts(), "Device type set to bluetooth for {}".format(contract.uuid))
+                print(gts(), "Device type set to gsm for {}".format(contract.uuid))
                 contract.device_type = 'gsm'
+            else:
+                print(gts(), "Device type set to bluetooth for {}".format(contract.uuid))
+                contract.device_type = 'bluetooth'
 
             if data.get('params', {}).get('gemocard_login'):
                 contract.login = data['params']['gemocard_login']

@@ -5,4 +5,3 @@ sudo cp agents_gemocard_nginx.conf /etc/nginx/sites-enabled/
 sudo supervisorctl update
 sudo systemctl restart nginx
 sudo certbot --nginx -d gemocard.medsenger.ru
-sudo ufw allow 5432
